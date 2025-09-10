@@ -42,7 +42,7 @@
     </header>
     <main>
         <p>This is a simple HTML template. You can customize it as per your needs.</p>
-        <div class="container" style="height: 60px; background-color:red;">
+        <div class="container" style=" padding: 50px;">
             <button class="btn btn-success btn-sm" id="AddProduct">Add Product</button>
             <div id="response-delete"></div>
             <table id="product_tbl">
