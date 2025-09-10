@@ -187,38 +187,58 @@
                     
                 ]
            });
-           $('#AddProduct').click(function () {
-           $('#AddproductModal').modal('show');
-           });
-           $('#productFrm').on('submit',function(e){
-            e.preventDefault();
-            alert('click on submit');
-            const formData = new FormData($('$productFrm'));
-            const product_id = $('#product_id').val();
-            if(product_id){formData.set('_method','PUT')} 
-            $.ajax({
-                url :'/api/get-products/',
-                type :'POST',
-                data : fomData,
-                success :function(response){
-                    $('#response-message').html(response.message);
-                },
-                error : function(xhr,status,error){
-                    if(xhr.status == 403){
-                        let errors = xhr.responseJSON.errors;
-                        let messages ='';
-                        for(let field in errors){
-                            messages += errors[field].join('<br>')+'<br>';
-                        } $('#response-message').html('<div class="alert alert-danger">' + messages + '</div>');
-                    }else {
-                         $('#response-message').html('<div class="alert alert-danger">Something went wrong.</div>');
-                    }
-                    $('#response-message').focus();
+          $('#AddProduct').click(function () {
+                $('#productFrm')[0].reset();
+                $('#product_id').val('');
+                $('#image-preview').empty();
+                $('#response-message').empty();
+                $('#AddproductModal').modal('show');
+            });
+
+           $('#productFrm').on('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const product_id = $('#product_id').val();
+
+                let method = 'POST';
+                let actionURL = '/api/get-products';
+
+                if (product_id) {
+                    method = 'POST';
+                    actionURL = `/api/get-products/${product_id}`;
+                    formData.set('_method', 'PUT');
                 }
-            })
-           })
+
+                $.ajax({
+                    url: actionURL,
+                    type: method,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $('#response-message').html(`<div class="alert alert-success">${response.message}</div>`);
+                        $('#productFrm')[0].reset();
+                        $('#product_tbl').DataTable().ajax.reload();
+                        $('#AddproductModal').modal('hide');
+                    },
+                    error: function (xhr, status, error) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            let messages = '';
+                            for (let field in errors) {
+                                messages += errors[field].join('<br>') + '<br>';
+                            }
+                            $('#response-message').html('<div class="alert alert-danger">' + messages + '</div>');
+                        } else {
+                            $('#response-message').html('<div class="alert alert-danger">Something went wrong.</div>');
+                        }
+                    }
+                });
+            });
+
            $('#product_tbl').on('click', '.editBtn', function (e) {
                 e.preventDefault();
+                $('#productFrm')[0].reset();
                 $product_id = $(this).data('id');
                 alert('hello');
                 $('#product_id').val($product_id);
@@ -277,28 +297,30 @@
             });
            $('#product_tbl').on('click', '.deleteBtn', function () {
               if(confirm('Are you sure to delete!')){
-                    const id = $(this).data('id');
-                    $.ajax({
-                        url :`/api/get-products/${id}`,
-                        type :'GET',
-                        success : function(response){
-                            $('#response-delete').addClass('alert alert-danger');
+                   const id = $(this).data('id');
+                   $.ajax({
+                        url: `/api/get-products/${id}`,
+                        type: 'DELETE',
+                        success: function(response) {
+                            $('#response-delete').addClass('alert alert-success');
                             $('#response-delete').html(`${response.message}`);
                             $('#product_tbl').DataTable().ajax.reload();
                         },
-                        error :function(xhr,status,error){
-                            alert('something went worng ');
+                        error: function(xhr, status, error) {
+                            alert('Something went wrong');
                         },
                     });
+
                }
             });
 
-           $('#image').on('change',function(){
-              const file = $(this).file();
-              $('#image-preview').empty();
-              $imgURL = URL.createObjectURL(file);
-              $('#image-preview').html(`<img src="${imgURL}" style="width:100px; height:100px;" />`)
-           })
+          $('#image').on('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    const imgURL = URL.createObjectURL(file);
+                    $('#image-preview').html(`<img src="${imgURL}" style="width:100px; height:100px;" />`);
+                }
+            });
         
         
         

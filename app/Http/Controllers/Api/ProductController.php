@@ -24,11 +24,17 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-         Product::create($request->validated());
-         return response()->json([
-            'message'=>'Record Saved!', 
-         ]);
+        $data = $request->validated();
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('product_images', 'public');
+            $data['image'] = $path;
+        }
+        Product::create($data);
+        return response()->json([
+            'message' => 'Record Saved!',
+        ]);
     }
+
 
     /**
      * Display the specified resource.
@@ -54,21 +60,26 @@ class ProductController extends Controller
             }
             $validated['image'] = $request->file('image')->store('uploads/products', 'public');
         }
+
         $product->fill($validated);
+
         if ($product->isDirty()) {
             $product->save();
+
             return response()->json([
                 'message' => 'Record is Updated!',
                 'change' => true,
-                'data' => $product, 
+                'data' => $product,
             ]);
-    }
+        }
 
     return response()->json([
-        'message' => 'No changes detected.',
+        'message' => 'No changes made.',
         'change' => false,
+        'data' => $product,
     ]);
-    }
+}
+
 
     /**
      * Remove the specified resource from storage.
